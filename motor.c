@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <windowsx.h>
 
+
 typedef struct {
     int x;
     int y;
@@ -13,38 +14,13 @@ typedef struct {
 // Variable global para almacenar el estado del clic
 BOOL isMouseDown = FALSE;
 
-// Variable global para almacenar el estado del temporizador
-UINT_PTR timerID;
-
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     static Block blocks[100][100]; // Matriz de bloques
 
     switch (uMsg) {
-        case WM_CREATE: {
-            // Configurar un temporizador para el mensaje WM_TIMER
-            timerID = SetTimer(hwnd, 1, 100, NULL);
-            return 0;
-        }
-        case WM_DESTROY: {
-            // Liberar el temporizador
-            KillTimer(hwnd, timerID);
+        case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
-        }
-        case WM_TIMER: {
-            // Realizar la comprobación cada 0.1 segundos
-            int xPos = GET_X_LPARAM(lParam);
-            int yPos = GET_Y_LPARAM(lParam);
-
-            int xBlock = xPos / 10;
-            int yBlock = yPos / 10;
-
-            if (xBlock >= 0 && xBlock < 100 && yBlock >= 0 && yBlock < 100) {
-                blocks[yBlock][xBlock].reves = (blocks[yBlock][xBlock].reves == TRUE) ? FALSE : TRUE;
-                InvalidateRect(hwnd, NULL, TRUE);
-            }
-            return 0;
-        }
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -57,8 +33,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             for (int y = 0; y < 100; y++) {
                 for (int x = 0; x < 100; x++) {
-                    // Resto del código para pintar los bloques
-                    // ...
+                    blocks[y][x].x = x * blockSize;
+                    blocks[y][x].y = y * blockSize;
+                    blocks[y][x].size = blockSize;
+                    blocks[y][x].blockNumber = y * 100 + x;
+
+                    
+                                                if (blocks[y][x].reves){
+                            blocks[y][x].color = RGB(255, 255, 255);
+                        }else{
+                            blocks[y][x].color = RGB(0, 0, 0);
+                            }
+                        
+                 
+                        if (blocks[y][x].reves){
+                            blocks[y][x].color = RGB(0, 0, 0);
+                        }else{
+                            blocks[y][x].color = RGB(255, 255, 255);
+                            }
+                        
+                    
+
+                    HBRUSH hBrush = CreateSolidBrush(blocks[y][x].color);
+                    SelectObject(hdc, hBrush);
+                    SetBkMode(hdc, TRANSPARENT);
+                    RECT rect = { blocks[y][x].x, blocks[y][x].y, blocks[y][x].x + blockSize, blocks[y][x].y + blockSize };
+                    FillRect(hdc, &rect, hBrush);
+                    DeleteObject(hBrush);
                 }
             }
 
