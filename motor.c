@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <windowsx.h>
 
 typedef struct {
     int x;
@@ -6,60 +7,106 @@ typedef struct {
     int size;
     int blockNumber;
     COLORREF color;
+    BOOL reves;
 } Block;
+
+// Variable global para almacenar el estado del clic
+BOOL isMouseDown = FALSE;
+
+// Variable global para almacenar el estado del temporizador
+UINT_PTR timerID;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     static Block blocks[100][100]; // Matriz de bloques
 
     switch (uMsg) {
-        case WM_DESTROY:
+        case WM_CREATE: {
+            // Configurar un temporizador para el mensaje WM_TIMER
+            timerID = SetTimer(hwnd, 1, 100, NULL);
+            return 0;
+        }
+        case WM_DESTROY: {
+            // Liberar el temporizador
+            KillTimer(hwnd, timerID);
             PostQuitMessage(0);
             return 0;
+        }
+        case WM_TIMER: {
+            // Realizar la comprobación cada 0.1 segundos
+            int xPos = GET_X_LPARAM(lParam);
+            int yPos = GET_Y_LPARAM(lParam);
+
+            int xBlock = xPos / 10;
+            int yBlock = yPos / 10;
+
+            if (xBlock >= 0 && xBlock < 100 && yBlock >= 0 && yBlock < 100) {
+                blocks[yBlock][xBlock].reves = (blocks[yBlock][xBlock].reves == TRUE) ? FALSE : TRUE;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+            return 0;
+        }
         case WM_PAINT: {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
             int blockSize = 10; // px alto y ancho
 
-                HBRUSH hBackgroundBrush = CreateSolidBrush(RGB(0, 147, 57)); // Cambia el color de fondo según tus preferencias
-                FillRect(hdc, &ps.rcPaint, hBackgroundBrush);
-                DeleteObject(hBackgroundBrush);
+            HBRUSH hBackgroundBrush = CreateSolidBrush(RGB(0, 147, 57));
+            FillRect(hdc, &ps.rcPaint, hBackgroundBrush);
+            DeleteObject(hBackgroundBrush);
+
             for (int y = 0; y < 100; y++) {
                 for (int x = 0; x < 100; x++) {
-                    blocks[y][x].x = x * blockSize;
-                    blocks[y][x].y = y * blockSize;
-                    blocks[y][x].size = blockSize;
-                    blocks[y][x].blockNumber = y * 100 + x;
-
-                    // Determinar el color basado en el bloque que tenga encima
-                    if (y > 0 && blocks[y - 1][x].color == RGB(255, 255, 255)) {
-                       
-                        blocks[y][x].color = RGB(0, 0, 0);
-                    } else {
-                        // Si es la primera fila, asigna un color inicial
-                        blocks[y][x].color = RGB(255, 255, 255); // Blanco
-                    }
-
-                    // Dibuja el cubo con el color asignado
-                    HBRUSH hBrush = CreateSolidBrush(blocks[y][x].color);
-                    SelectObject(hdc, hBrush);
-                    SetBkMode(hdc, TRANSPARENT);
-                    RECT rect = { blocks[y][x].x, blocks[y][x].y, blocks[y][x].x + blockSize, blocks[y][x].y + blockSize };
-                    FillRect(hdc, &rect, hBrush);
-
-                    DeleteObject(hBrush); // Limpia el pincel creado
-
+                    // Resto del código para pintar los bloques
+                    // ...
                 }
             }
 
             EndPaint(hwnd, &ps);
             return 0;
         }
+        case WM_LBUTTONDOWN: {
+            isMouseDown = TRUE;
+            int xPos = GET_X_LPARAM(lParam);
+            int yPos = GET_Y_LPARAM(lParam);
+
+            // Identificar el bloque clicado
+            int xBlock = xPos / 10; // tamaño del bloque
+            int yBlock = yPos / 10;
+
+            // Cambiar el color del bloque clicado
+            if (xBlock >= 0 && xBlock < 100 && yBlock >= 0 && yBlock < 100) {
+                blocks[yBlock][xBlock].reves = (blocks[yBlock][xBlock].reves == TRUE) ? FALSE : TRUE;
+                InvalidateRect(hwnd, NULL, TRUE);
+            }
+
+            return 0;
+        }
+        case WM_LBUTTONUP: {
+            isMouseDown = FALSE;
+            return 0;
+        }
+        case WM_MOUSEMOVE: {
+            // Si el botón está presionado, cambiar el color mientras se mueve
+            if (isMouseDown) {
+                int xPos = GET_X_LPARAM(lParam);
+                int yPos = GET_Y_LPARAM(lParam);
+
+                int xBlock = xPos / 10;
+                int yBlock = yPos / 10;
+
+                if (xBlock >= 0 && xBlock < 100 && yBlock >= 0 && yBlock < 100) {
+                    blocks[yBlock][xBlock].reves = (blocks[yBlock][xBlock].reves == TRUE) ? FALSE : TRUE;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            }
+
+            return 0;
+        }
     }
 
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
-
 
 int main() {
     // Registro de la clase de la ventana
