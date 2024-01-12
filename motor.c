@@ -1,54 +1,111 @@
-#include <stdio.h>
 #include <windows.h>
 
-// Procedimiento de ventana (Window Procedure)
+typedef struct {
+    int x;
+    int y;
+    int size;
+    int blockNumber;
+    COLORREF color;
+} Block;
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    static Block blocks[100][100]; // Matriz de bloques
+
     switch (uMsg) {
         case WM_DESTROY:
             PostQuitMessage(0);
             return 0;
-        default:
-            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+
+            int blockSize = 10; // px alto y ancho
+
+                HBRUSH hBackgroundBrush = CreateSolidBrush(RGB(0, 147, 57)); // Cambia el color de fondo según tus preferencias
+                FillRect(hdc, &ps.rcPaint, hBackgroundBrush);
+                DeleteObject(hBackgroundBrush);
+            for (int y = 0; y < 100; y++) {
+                for (int x = 0; x < 100; x++) {
+                    blocks[y][x].x = x * blockSize;
+                    blocks[y][x].y = y * blockSize;
+                    blocks[y][x].size = blockSize;
+                    blocks[y][x].blockNumber = y * 100 + x;
+
+                    // Determinar el color basado en el bloque que tenga encima
+                    if (y > 0 && blocks[y - 1][x].color == RGB(255, 255, 255)) {
+                        // Si hay un bloque encima, toma su color
+                        blocks[y][x].color = RGB(255, 255, 255);
+                    } else {
+                        // Si es la primera fila, asigna un color inicial
+                        blocks[y][x].color = RGB(255, 255, 255); // Blanco
+                    }
+
+                    // Dibuja el cubo con el color asignado
+                    HBRUSH hBrush = CreateSolidBrush(blocks[y][x].color);
+                    SelectObject(hdc, hBrush);
+                    SetBkMode(hdc, TRANSPARENT);
+                    Rectangle(hdc, blocks[y][x].x , blocks[y][x].y ,blocks[y][x].x + blockSize , blocks[y][x].y + blockSize);
+                    DeleteObject(hBrush); // Limpia el pincel creado
+
+                }
+            }
+
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
     }
+
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-int main() {
-    // Paso 1: Registrar la clase de la ventana
-    WNDCLASSW wc = { 0 };  // Utiliza WNDCLASSW para cadenas de caracteres de ancho
-    wc.lpfnWndProc = WindowProc;
-    wc.hInstance = GetModuleHandleW(NULL);  // Utiliza GetModuleHandleW para cadenas de caracteres de ancho
-    wc.hbrBackground = (HBRUSH)(GetStockObject(BLACK_BRUSH)); // Establece el fondo a negro
-    wc.lpszClassName = L"MiVentanaClase";
 
-    if (!RegisterClassW(&wc)) {  // Utiliza RegisterClassW para cadenas de caracteres de ancho
-        MessageBoxW(NULL, L"Error al registrar la clase de la ventana", L"Error", MB_OK | MB_ICONERROR);
+int main() {
+    // Registro de la clase de la ventana
+    WNDCLASSW wc = {0}; // Usa WNDCLASSW para literales de cadena amplios
+    wc.lpfnWndProc = WindowProc;
+    wc.hInstance = GetModuleHandle(NULL);
+    wc.lpszClassName = L"VentanaClase"; // Usa el prefijo L para literales de cadena amplios
+
+    if (!RegisterClassW(&wc)) { // Usa RegisterClassW para literales de cadena amplios
+        MessageBoxW(NULL, L"Error al registrar la clase de la ventana", L"Error", MB_ICONERROR); // Usa MessageBoxW
         return 1;
     }
 
-    // Paso 2: Crear la ventana
+    // Creación de la ventana
     HWND hwnd = CreateWindowExW(
         0,
-        L"MiVentanaClase",
-        L"Mi Ventana",
+        L"VentanaClase",
+        L"Ventana en Blanco y Negro",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 800, 600,
-        NULL, NULL, GetModuleHandleW(NULL), NULL);  // Utiliza GetModuleHandleW para cadenas de caracteres de ancho
+        100, // Posición x
+        100, // Posición y
+        1000,
+        1000,
+        NULL,
+        NULL,
+        GetModuleHandle(NULL),
+        NULL
+    );
 
     if (!hwnd) {
-        MessageBoxW(NULL, L"Error al crear la ventana", L"Error", MB_OK | MB_ICONERROR);
+        MessageBoxW(NULL, L"Error al crear la ventana", L"Error", MB_ICONERROR); // Usa MessageBoxW
         return 1;
     }
+ 
 
-    // Paso 3: Mostrar y actualizar la ventana
+    
     ShowWindow(hwnd, SW_SHOWNORMAL);
-    UpdateWindow(hwnd);
 
-    // Paso 4: Bucle de mensajes
     MSG msg;
-    while (GetMessageW(&msg, NULL, 0, 0)) {  // Utiliza GetMessageW para cadenas de caracteres de ancho
+    while (GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        DispatchMessageW(&msg);  // Utiliza DispatchMessageW para cadenas de caracteres de ancho
+        DispatchMessage(&msg);
     }
+
+  
+
+    // Eliminar la clase de ventana registrada
+    UnregisterClassW(L"VentanaClase", GetModuleHandle(NULL)); // Usa UnregisterClassW
 
     return 0;
 }
