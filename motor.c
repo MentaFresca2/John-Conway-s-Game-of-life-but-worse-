@@ -33,8 +33,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     // Determinar el color basado en el bloque que tenga encima
                     if (y > 0 && blocks[y - 1][x].color == RGB(255, 255, 255)) {
-                        // Si hay un bloque encima, toma su color
-                        blocks[y][x].color = RGB(255, 255, 255);
+                       
+                        blocks[y][x].color = RGB(0, 0, 0);
                     } else {
                         // Si es la primera fila, asigna un color inicial
                         blocks[y][x].color = RGB(255, 255, 255); // Blanco
@@ -44,7 +44,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     HBRUSH hBrush = CreateSolidBrush(blocks[y][x].color);
                     SelectObject(hdc, hBrush);
                     SetBkMode(hdc, TRANSPARENT);
-                    Rectangle(hdc, blocks[y][x].x , blocks[y][x].y ,blocks[y][x].x + blockSize , blocks[y][x].y + blockSize);
+                    RECT rect = { blocks[y][x].x, blocks[y][x].y, blocks[y][x].x + blockSize, blocks[y][x].y + blockSize };
+                    FillRect(hdc, &rect, hBrush);
+
                     DeleteObject(hBrush); // Limpia el pincel creado
 
                 }
