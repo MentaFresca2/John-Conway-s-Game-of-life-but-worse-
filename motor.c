@@ -11,8 +11,12 @@ typedef struct {
     BOOL reves;
 } Block;
 
+//Variable global que almacena el estado del juego
+BOOL empezado = FALSE;
 // Variable global para almacenar el estado del clic
 BOOL isMouseDown = FALSE;
+
+
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     static Block blocks[100][100]; // Matriz de bloques
@@ -22,6 +26,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PostQuitMessage(0);
             return 0;
         case WM_PAINT: {
+
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
@@ -38,20 +43,92 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     blocks[y][x].size = blockSize;
                     blocks[y][x].blockNumber = y * 100 + x;
 
-                    
-                                                if (blocks[y][x].reves){
-                            blocks[y][x].color = RGB(255, 255, 255);
+                    if(empezado){
+                        if (blocks[y][x].color == RGB(0, 0, 0)){
+                            int vivos = 0;
+                            if(blocks[y - 1][x].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y - 1][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y - 1][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(vivos == 3){
+                                blocks[y][x].color = RGB(255, 255, 255);
+                            }else{
+                                blocks[y][x].color = RGB(0, 0, 0);
+                                }
                         }else{
-                            blocks[y][x].color = RGB(0, 0, 0);
+                            int vivos = 0;
+                            if(blocks[y - 1][x].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y - 1][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y - 1][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(vivos == 2 || vivos == 3){
+                                blocks[y][x].color = RGB(255, 255, 255);
+                            }
+                            if(vivos += 4){
+                                blocks[y][x].color = RGB(0, 0, 0);
+                            }
+                            if(vivos -= 1){
+                                blocks[y][x].color = RGB(0, 0, 0);
+                            }
+                            }
+                        
+                 
+                              
+
+                    }else{
+                        if (blocks[y][x].reves){
+                            blocks[y][x].color = RGB(000, 000, 000);
+                        }else{
+                            blocks[y][x].color = RGB(255, 255, 255);
                             }
                         
                  
                         if (blocks[y][x].reves){
-                            blocks[y][x].color = RGB(0, 0, 0);
-                        }else{
                             blocks[y][x].color = RGB(255, 255, 255);
+                        }else{
+                            blocks[y][x].color = RGB(0, 0, 0);
                             }
-                        
+                    }
                     
 
                     HBRUSH hBrush = CreateSolidBrush(blocks[y][x].color);
@@ -83,12 +160,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             return 0;
         }
+        case WM_KEYDOWN:{
+                if (wParam == VK_SPACE) {
+            
+            empezado = TRUE;
+        }
+
+
+        }
         case WM_LBUTTONUP: {
             isMouseDown = FALSE;
             return 0;
         }
         case WM_MOUSEMOVE: {
-            // Si el botón está presionado, cambiar el color mientras se mueve
+            
             if (isMouseDown) {
                 int xPos = GET_X_LPARAM(lParam);
                 int yPos = GET_Y_LPARAM(lParam);
