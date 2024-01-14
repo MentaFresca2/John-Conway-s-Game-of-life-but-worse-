@@ -7,14 +7,18 @@ typedef struct {
     int size;
     int blockNumber;
     COLORREF color;
+    COLORREF color2;
 } Block;
+
+// Matriz de blocks
+static Block blocks[100][100];
 
 BOOL empezado = FALSE;
 BOOL isMouseDown = FALSE;
 UINT_PTR timerID;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    static Block blocks[100][100];
+    
 
     switch (uMsg) {
         case WM_DESTROY:
@@ -26,26 +30,128 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             int blockSize = 10;
 
-            HBRUSH hBackgroundBrush = CreateSolidBrush(RGB(0, 147, 57));
+            HBRUSH hBackgroundBrush = CreateSolidBrush(RGB(0, 0, 0));
             FillRect(hdc, &ps.rcPaint, hBackgroundBrush);
             DeleteObject(hBackgroundBrush);
 
             for (int y = 0; y < 100; y++) {
                 for (int x = 0; x < 100; x++) {
-                    blocks[y][x].x = x * blockSize;
-                    blocks[y][x].y = y * blockSize;
-                    blocks[y][x].size = blockSize;
-                    blocks[y][x].blockNumber = y * 100 + x;
+                    if(empezado){
+                        if (blocks[y][x].color == RGB(0, 0, 0)){
+                            int vivos = 0;
+                            if(blocks[y - 1][x].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y - 1][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y - 1][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(vivos == 3){
+                                blocks[y][x].color2 = RGB(255, 255, 255);
+                            }else{
+                                blocks[y][x].color2 = RGB(0, 0, 0);
+                                }
+                        }else{
+                            int vivos = 0;
+                            if(blocks[y - 1][x].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y - 1][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y + 1][x - 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(blocks[y - 1][x + 1].color == RGB(255, 255, 255)){
+                            vivos++;
+                            }
+                            if(vivos == 3){
+                                blocks[y][x].color2 = RGB(255, 255, 255);
+                            }
+                            if(vivos == 2){
+                                blocks[y][x].color2 = RGB(255, 255, 255);
+                            }
+                            if(vivos >= 4){
+                                blocks[y][x].color2 = RGB(0, 0, 0);
+                            }
+                            if(vivos <= 1){
+                                blocks[y][x].color2 = RGB(0, 0, 0);
+                            }
+                            }
+                        
+                 
+                              
 
-                    HBRUSH hBrush = CreateSolidBrush(blocks[y][x].color);
-                    SelectObject(hdc, hBrush);
-                    SetBkMode(hdc, TRANSPARENT);
-                    RECT rect = { blocks[y][x].x, blocks[y][x].y, blocks[y][x].x + blockSize, blocks[y][x].y + blockSize };
-                    FillRect(hdc, &rect, hBrush);
-                    DeleteObject(hBrush);
+                    }
+                    if(!empezado){
+      
+                        HBRUSH hBrush = CreateSolidBrush(blocks[y][x].color);
+                        SelectObject(hdc, hBrush);
+                        SetBkMode(hdc, TRANSPARENT);
+
+                        RECT rect = { blocks[y][x].x, blocks[y][x].y, blocks[y][x].x + blockSize, blocks[y][x].y + blockSize };
+
+                        // Convierte el RECT a un objeto Rectangle
+                        Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
+
+                        // Define un nuevo RECT para el borde
+                        RECT borderRect = { rect.left - 1, rect.top - 1, rect.right + 1, rect.bottom + 1 };
+
+                        // Dibuja el borde gris
+                        FrameRect(hdc, &borderRect, GetSysColorBrush(COLOR_GRAYTEXT));
+
+                        FillRect(hdc, &rect, hBrush);
+                        DeleteObject(hBrush);
+                    }
                 }
             }
+        if(empezado){
+            for (int y = 0; y < 100; y++) {
+                for (int x = 0; x < 100; x++) {
+                
+                blocks[y][x].color = blocks[y][x].color2;
+                HBRUSH hBrush = CreateSolidBrush(blocks[y][x].color2);
+                SelectObject(hdc, hBrush);
+                SetBkMode(hdc, TRANSPARENT);
+                RECT rect = { blocks[y][x].x, blocks[y][x].y, blocks[y][x].x + blockSize, blocks[y][x].y + blockSize };
+                FillRect(hdc, &rect, hBrush);
+                DeleteObject(hBrush);
 
+
+
+                    
+                }
+            }
+        }
             EndPaint(hwnd, &ps);
             return 0;
         }
@@ -65,9 +171,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return 0;
         }
         case WM_KEYDOWN:
-            if (wParam == VK_SPACE) {
+            if (wParam == VK_RETURN) {
                 empezado = TRUE;
                 timerID = SetTimer(hwnd, 1, 200, NULL);
+            }
+            if (wParam == VK_BACK) {
+                 empezado = FALSE;
+                 KillTimer(hwnd, timerID);
             }
             break;
         case WM_TIMER:
@@ -104,6 +214,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 }
 
 int main() {
+    int blockSize = 10;
+
+    for (int y = 0; y < 100; y++) {
+                for (int x = 0; x < 100; x++) {
+                    blocks[y][x].x = x * blockSize;
+                    blocks[y][x].y = y * blockSize;
+                    blocks[y][x].size = blockSize;
+                    blocks[y][x].blockNumber = y * 100 + x;
+                }
+            }
+
     WNDCLASSW wc = {0};
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = GetModuleHandle(NULL);
